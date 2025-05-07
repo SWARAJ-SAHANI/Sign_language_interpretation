@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .gestures-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 20px;
+    background: linear-gradient(135deg, #1a237e, #7b1fa2);
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    color: #fff;
+    text-align: center;
+    transition: background 0.3s, border 0.3s, color 0.3s;
+  }
+  /* Title Card */
+  .title-card {
+    padding: 30px;
+    margin-bottom: 30px;
+    border: 3px solid #ffffff;
+    border-radius: 8px;
+  }
+  .title-card h1 {
+    font-size: 3em;
+    margin-bottom: 10px;
+    color: #ffeb3b;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  }
+  .title-card p {
+    font-size: 1.3em;
+    color: #f0f0f0;
+    line-height: 1.6;
+  }
+  /* Section Card Styling for Numbers and Alphabets */
+  .section-card {
+    padding: 30px;
+    margin-bottom: 30px;
+    border: 3px solid #ffffff;
+    border-radius: 8px;
+    text-align: center;
+    transition: background 0.3s, border 0.3s, color 0.3s;
+  }
+  .section-card h2 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    color: #ffeb3b;
+  }
+  .section-card .description {
+    font-size: 1.1em;
+    margin-bottom: 20px;
+    color: #f0f0f0;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+  }
+  /* Grid Layout for Gestures */
+  .gestures-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+  }
+  /* Default style for gesture items */
+  .gesture-item {
+    background: rgba(26, 35, 126, 0.90);
+    border: 2px solid #ffffff;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    transition: background 0.3s, transform 0.3s;
+  }
+  .gesture-item p {
+    margin-top: 10px;
+    font-size: 1em;
+    color: #ffeb3b;
+  }
+  /* Hover effect on gesture items (no image filter applied) */
+  .gesture-item:hover {
+    background: rgba(26, 35, 126, 1);
+    transform: scale(1.05);
+  }
+  /* Numbers Grid: Force 5 items per row */
+  .numbers-grid .gesture-item {
+    flex: 0 0 calc(20% - 20px);
+  }
+  .numbers-grid .gesture-item img {
+    max-width: 100%;
+    border-radius: 4px;
+  }
+  /* For all numbers, use original image display */
+  .original-img {
+    height: auto;
+  }
+  /* Alphabets Grid: Force 4 items per row */
+  .alphabets-grid .gesture-item {
+    flex: 0 0 calc(25% - 20px);
+  }
+  /* Alphabets: Use a container with fixed height (200px) */
+  .alphabet-img-container {
+    width: 100%;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 4px;
+  }
+  .alphabet-img-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+  @media (max-width: 768px) {
+    .gesture-item {
+      flex: 0 0 100%;
+    }
+  }
+
+  /* Dark Theme Styles */
+  body.dark-mode .gestures-container {
+    background: linear-gradient(135deg, #1e1e3f, #0d1137);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+  }
+  body.dark-mode .title-card {
+    border: 3px solid #00e5ff;
+  }
+  body.dark-mode .title-card h1 {
+    color: #ffeb3b;
+  }
+  body.dark-mode .title-card p {
+    color: #e0e0e0;
+  }
+  body.dark-mode .section-card {
+    background: rgba(29, 29, 55, 0.95);
+    border: 3px solid #00e5ff;
+    color: #e0e0e0;
+  }
+  body.dark-mode .section-card h2 {
+    color: #00e5ff;
+  }
+  body.dark-mode .section-card .description {
+    color: #e0e0e0;
+  }
+</style>
+
+{% set numbers = range(1, 11) %}
+{% set letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"|list %}
+{% set simple_sign = ["call", "dislike", "hi", "like", "love you", "ok", "peace"] %}
+
+<div class="gestures-container">
+  <!-- Title Card -->
+  <div class="title-card">
+    <h1>Supported Gestures</h1>
+    <p>Our system recognizes a wide range of gestures. Browse the gestures for numbers and alphabets below.</p>
+  </div>
+  
+  <!-- Numbers Section Card -->
+  <div class="section-card">
+    <h2>Numbers</h2>
+    <p class="description">These gestures represent numbers from 1 to 10. All images are displayed in their original shape.</p>
+    <div class="gestures-grid numbers-grid">
+      {% for num in numbers %}
+        <div class="gesture-item">
+          <img class="original-img" src="{{ url_for('static', filename='images/numbers/' ~ num ~ '.png') }}" alt="Gesture {{ num }}">
+          <p>Gesture {{ num }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  
+  <!-- Alphabets Section Card -->
+  <div class="section-card">
+    <h2>Alphabets</h2>
+    <p class="description">These gestures represent alphabets from A to Z. Each image is displayed in a uniform container for consistency.</p>
+    <div class="gestures-grid alphabets-grid">
+      {% for letter in letters %}
+        <div class="gesture-item">
+          <div class="alphabet-img-container">
+            <img src="{{ url_for('static', filename='images/alphabets/' ~ letter ~ '.jpg') }}" alt="Gesture {{ letter }}">
+          </div>
+          <p>Gesture {{ letter }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h2>Simple Sign</h2>
+    <p class="description">These gestures represent alphabets from A to Z. Each image is displayed in a uniform container for consistency.</p>
+    <div class="gestures-grid alphabets-grid">
+      {% for simple in simple_sign %}
+        <div class="gesture-item">
+          <div class="alphabet-img-container">
+            <img src="{{ url_for('static', filename='images/simple_signs/' ~ simple ~ '.jpg') }}" alt="Gesture {{ simple }}">
+          </div>
+          <p>Gesture {{ simple }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

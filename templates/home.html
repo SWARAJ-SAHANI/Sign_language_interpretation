@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  /* Outer Big Card Container */
+  .big-card {
+    background: linear-gradient(135deg, #1a237e, #7b1fa2);
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    padding: 40px;
+    margin: 40px auto;
+    max-width: 1000px;
+    color: #fff;
+    transition: box-shadow 0.3s ease;
+    text-align: center;
+  }
+  .big-card:hover {
+    box-shadow: 0 12px 36px rgba(0,0,0,0.4);
+  }
+  body.dark-mode .big-card {
+    background: linear-gradient(135deg, #1e1e3f, #0d1137);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+    color: #e0e0e0;
+  }
+  body.dark-mode .big-card:hover {
+    box-shadow: 0 12px 36px rgba(0,0,0,0.9);
+  }
+  
+  /* Inner Card Styling – with a distinct white border */
+  .inner-card {
+    background: rgba(26, 35, 126, 0.95);
+    border: 3px solid #ffffff;
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 30px;
+    color: #fff;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    text-align: center;
+  }
+  .inner-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  body.dark-mode .inner-card {
+    background: rgba(29, 29, 55, 0.95);
+    border: 3px solid #00e5ff;
+    color: #e0e0e0;
+  }
+  
+  /* Hero Section Card: Title and Extra Content */
+  .hero-card h1 {
+    font-size: 3em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #ffeb3b;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 20px;
+  }
+  .hero-card p {
+    font-size: 1.3em;
+    margin-bottom: 20px;
+    color: #f0f0f0;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+  }
+  .hero-card .extra {
+    font-size: 1em;
+    color: #ddd;
+    margin-bottom: 30px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+  }
+  .hero-card a.btn {
+    background: #fff;
+    color: #1a237e;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    transition: background 0.3s;
+  }
+  .hero-card a.btn:hover {
+    background: #e0e0e0;
+  }
+  
+  /* Features Section Card */
+  .features-card h2 {
+    font-size: 2.2em;
+    margin-bottom: 20px;
+    color: #ffeb3b;
+  }
+  body.dark-mode .features-card h2 {
+    color: #00e5ff;
+  }
+  .features-card .intro {
+    font-size: 1.1em;
+    margin-bottom: 20px;
+    color: #fff;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+  }
+  
+  /* Features Grid - 2 rows of 2 columns */
+  .features-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+  }
+  .feature-card {
+    flex: 0 0 calc(50% - 20px);
+    background: rgba(26, 35, 126, 0.95);
+    border: 3px solid #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    color: #fff;
+    transition: transform 0.3s, box-shadow 0.3s;
+    text-align: center;
+  }
+  .feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  /* Feature Title Styling: Bold and matching border color */
+  .feature-card h3 {
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  .feature-card.feature1 h3 {
+    color: #ffffff;
+  }
+  .feature-card.feature2 h3 {
+    color: #ffeb3b;
+  }
+  .feature-card.feature3 h3 {
+    color: #28a745;
+  }
+  .feature-card.feature4 h3 {
+    color: #e91e63;
+  }
+  /* Slight stylistic variations for each feature card */
+  .feature-card.feature2 {
+    background: rgba(26, 35, 126, 0.90);
+    border-color: #ffeb3b;
+  }
+  .feature-card.feature3 {
+    border-color: #28a745;
+  }
+  .feature-card.feature4 {
+    border-color: #e91e63;
+  }
+  body.dark-mode .feature-card {
+    background: rgba(29, 29, 55, 0.95);
+    border: 3px solid #00e5ff;
+    color: #e0e0e0;
+  }
+  
+  /* How It Works Section Card */
+  .how-it-works-card h2 {
+    font-size: 2.2em;
+    margin-bottom: 20px;
+    color: #ffeb3b;
+  }
+  body.dark-mode .how-it-works-card h2 {
+    color: #00e5ff;
+  }
+  .how-it-works-card p {
+    font-size: 1.1em;
+    line-height: 1.6;
+    color: #fff;
+    text-align: justify;
+    margin-bottom: 20px;
+  }
+  body.dark-mode .how-it-works-card p {
+    color: #e0e0e0;
+  }
+  .how-it-works-card img {
+    display: block;
+    margin: 20px auto;
+    max-width: 100%;
+    border-radius: 8px;
+  }
+  
+  /* Call-to-Action Section Card */
+  .cta-card h2 {
+    font-size: 2.2em;
+    margin-bottom: 20px;
+    color: #ffeb3b;
+  }
+  body.dark-mode .cta-card h2 {
+    color: #00e5ff;
+  }
+  .cta-card p {
+    font-size: 1.1em;
+    line-height: 1.6;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  body.dark-mode .cta-card p {
+    color: #e0e0e0;
+  }
+  .cta-card a.btn {
+    background: #28a745;
+    border: none;
+    padding: 12px 30px;
+    font-size: 1em;
+    border-radius: 5px;
+    color: #fff;
+    text-decoration: none;
+    transition: background 0.3s;
+  }
+  .cta-card a.btn:hover {
+    background: #218838;
+  }
+  
+  /* Responsive adjustments for feature cards */
+  @media (max-width: 768px) {
+    .feature-card {
+      flex: 0 0 100%;
+    }
+  }
+</style>
+
+<div class="container">
+  <div class="big-card">
+    <!-- Hero Section Card: Title -->
+    <div class="inner-card hero-card">
+      <h1>Sign Language Recognition System</h1>
+      <p>
+        Empowering communication through advanced, real-time sign language detection using Mediapipe and Machine Learning.
+      </p>
+      <p class="extra">
+        Our platform accurately recognizes signs and provides interactive audio feedback, making communication accessible for everyone.
+      </p>
+      <a href="{{ url_for('sign_recognition') }}" class="btn btn-light">Get Started</a>
+    </div>
+    
+    <!-- Features Section Card -->
+    <div class="inner-card features-card">
+      <h2>Features</h2>
+      <p class="intro">
+        Discover our key features:
+      </p>
+      <div class="features-grid">
+        <div class="feature-card feature1">
+          <h3>Real-time detection</h3>
+          <p>Instant capture of hand movements.</p>
+        </div>
+        <div class="feature-card feature2">
+          <h3>Accurate predictions</h3>
+          <p>High precision recognition.</p>
+        </div>
+        <div class="feature-card feature3">
+          <h3>Custom signs</h3>
+          <p>Personalize your vocabulary.</p>
+        </div>
+        <div class="feature-card feature4">
+          <h3>Audio feedback</h3>
+          <p>Hear signs spoken aloud.</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- How It Works Section Card -->
+    <div class="inner-card how-it-works-card">
+      <h2>How It Works</h2>
+      <p>
+        Our application uses <strong>Mediapipe</strong> to capture hand landmarks in real time. These landmarks are normalized and processed by our machine learning model, which interprets the signs and displays them on screen. The system then provides audio feedback by speaking the recognized sign aloud.
+      </p>
+      <p>
+        Users can also add custom signs, making the platform adaptable to personal vocabularies.
+      </p>
+      <img src="{{ url_for('static', filename='images/how_it_works.png') }}" alt="How It Works Illustration">
+    </div>
+    
+    <!-- Call-to-Action Section Card -->
+    <div class="inner-card cta-card">
+      <h2>Start Communicating Today!</h2>
+      <p>
+        Experience the future of accessible communication. Whether you're learning sign language or need reliable translation, our system bridges the gap.
+      </p>
+      <a href="{{ url_for('sign_recognition') }}" class="btn btn-success">Explore Now</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

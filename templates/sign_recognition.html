@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  /* Big Outer Card */
+  .big-card {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px;
+    background: linear-gradient(135deg, #1a237e, #7b1fa2);
+    border: 3px solid rgba(255,255,255,0.5);
+    border-radius: 12px;
+    color: #fff;
+    transition: background 0.3s, border 0.3s, color 0.3s;
+  }
+  
+  /* Title Card */
+  .title-card {
+    text-align: center;
+    padding: 30px;
+    border: 3px solid #ffffff;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .title-card h2 {
+    font-size: 2.5em;
+    color: #ffeb3b;
+    margin-bottom: 10px;
+  }
+  
+  /* Video Wrapper */
+  .video-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 40px);
+  }
+  
+  /* Video Container */
+  .video-container {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    border: 3px solid #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .video-container img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    display: block;
+  }
+  
+  /* Placeholder overlay */
+  #videoPlaceholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #555;
+    z-index: 2;
+  }
+  
+  /* Result Box */
+  .result-box {
+    margin-top: 20px;
+    width: 100%;
+    max-width: 800px;
+    border: 1px solid #ddd;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    font-size: 18px;
+    text-align: center;
+    color: #333;
+  }
+  
+  /* Button Container */
+  .button-container {
+    margin-top: 20px;
+    display: flex;
+    gap: 20px;
+  }
+  
+  .btn-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    font-size: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Dark Mode Adjustments (if applicable) */
+  body.dark-mode .big-card {
+    background: linear-gradient(135deg, #1e1e3f, #0d1137);
+    border: 3px solid rgba(255,255,255,0.3);
+    color: #e0e0e0;
+  }
+  body.dark-mode .title-card h2 {
+    color: #00e5ff;
+  }
+</style>
+
+<div class="big-card">
+  <!-- Title Card -->
+  <div class="title-card">
+    <h2>Live Sign Recognition</h2>
+  </div>
+  
+  <!-- Video Content Wrapper -->
+  <div class="video-wrapper">
+    <div class="video-container">
+      <!-- Placeholder overlay -->
+      <div id="videoPlaceholder">Loading Video...</div>
+      <!-- The MJPEG stream -->
+      <img id="videoFeed" src="{{ url_for('video_feed') }}?landmarks=1" alt="Live Video Feed" onload="hidePlaceholder()">
+    </div>
+    <!-- Result box for ML output (will update continuously) -->
+    <div id="mlOutput" class="result-box">
+      <span id="mlResultText">Waiting for pose...</span>
+    </div>
+    <!-- Buttons -->
+    <div class="button-container">
+      <button class="btn btn-primary btn-circle" id="toggleLandmark" onclick="toggleLandmarks()">
+        <i class="fas fa-eye"></i>
+      </button>
+      <button class="btn btn-success btn-circle" id="toggleAudio" onclick="toggleAudio()">
+        <i class="fas fa-volume-up"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Hide the placeholder once the video feed loads.
+  function hidePlaceholder() {
+    document.getElementById('videoPlaceholder').style.display = 'none';
+  }
+  
+  // Toggle landmarks functionality.
+  function toggleLandmarks(){
+    fetch("{{ url_for('toggle_landmarks') }}", { method: "POST", cache: "no-cache" })
+      .then(response => response.json())
+      .then(data => {
+        const landmarkButton = document.getElementById('toggleLandmark');
+        const landmarkIcon = landmarkButton.querySelector('i');
+        if(data.landmarks_enabled){
+          landmarkIcon.classList.remove('fa-eye-slash');
+          landmarkIcon.classList.add('fa-eye');
+          landmarkButton.classList.remove('btn-danger');
+          landmarkButton.classList.add('btn-primary');
+        } else {
+          landmarkIcon.classList.remove('fa-eye');
+          landmarkIcon.classList.add('fa-eye-slash');
+          landmarkButton.classList.remove('btn-primary');
+          landmarkButton.classList.add('btn-danger');
+        }
+      })
+      .catch(error => console.error("Error toggling landmarks:", error));
+  }
+  
+  let audioEnabled = true;
+  let lastSpokenText = "";
+  function toggleAudio(){
+    fetch("{{ url_for('toggle_audio') }}", { method: "POST", cache: "no-cache" })
+      .then(response => response.json())
+      .then(data => {
+        const audioButton = document.getElementById('toggleAudio');
+        const audioIcon = audioButton.querySelector('i');
+        if(data.audio_enabled){
+          audioEnabled = true
+          audioIcon.classList.remove('fa-volume-mute');
+          audioIcon.classList.add('fa-volume-up');
+          audioButton.classList.remove('btn-danger');
+          audioButton.classList.add('btn-success');
+        } else {
+          audioEnabled = false
+          audioIcon.classList.remove('fa-volume-up');
+          audioIcon.classList.add('fa-volume-mute');
+          audioButton.classList.remove('btn-success');
+          audioButton.classList.add('btn-danger');
+        }
+      })
+      .catch(error => console.error("Error toggling audio:", error));
+  }
+
+
+
+
+
+  // // Toggle audio functionality.
+  // let audioEnabled = true;
+  // let lastSpokenText = "";
+  // function toggleAudio(){
+  //   audioEnabled = !audioEnabled;
+  //   const audioButton = document.getElementById('toggleAudio');
+  //   const audioIcon = audioButton.querySelector('i');
+  //   if(audioEnabled){
+  //     audioIcon.classList.remove('fa-volume-mute');
+  //     audioIcon.classList.add('fa-volume-up');
+  //     audioButton.classList.remove('btn-danger');
+  //     audioButton.classList.add('btn-success');
+  //   } else {
+  //     audioIcon.classList.remove('fa-volume-up');
+  //     audioIcon.classList.add('fa-volume-mute');
+  //     audioButton.classList.remove('btn-success');
+  //     audioButton.classList.add('btn-danger');
+  //     lastSpokenText = "";
+  //   }
+  // }
+  
+  // Listen for ML output via Server-Sent Events.
+  const eventSource = new EventSource("{{ url_for('ml_stream') }}");
+  eventSource.onmessage = function(event) {
+    const newText = event.data;
+    document.getElementById('mlResultText').innerText = newText;
+    
+    if (audioEnabled && newText.trim() !== "" &&
+        !newText.trim().startsWith("Waiting for") &&
+        newText !== lastSpokenText) {
+      lastSpokenText = newText;
+      fetch("{{ url_for('speak') }}", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({text: newText})
+      })
+      .then(response => response.json())
+      .then(data => console.log("Spoken:", data))
+      .catch(error => console.error("Error speaking text:", error));
+    }
+  };
+  
+  eventSource.onerror = function(event) {
+    console.error("SSE error:", event);
+  };
+</script>
+{% endblock %}

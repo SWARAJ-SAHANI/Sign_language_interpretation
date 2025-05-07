@@ -1,0 +1,7 @@
+pandas
+numpy 
+mediapipe
+scikit-learn
+Flask
+pyttsx3
+opencv-python

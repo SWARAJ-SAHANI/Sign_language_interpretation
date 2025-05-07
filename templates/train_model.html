@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  /* Big Outer Card */
+  .big-card {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px;
+    background: linear-gradient(135deg, #1a237e, #7b1fa2);
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    color: #fff;
+    transition: background 0.3s, border 0.3s, color 0.3s;
+    overflow: visible;
+  }
+  /* Configuration Card */
+  .config-card {
+    background: rgba(26, 35, 126, 0.90);
+    border: 3px solid #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    overflow: visible;
+  }
+  .config-card h2 {
+    color: #ffeb3b;
+    font-size: 2em;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .form-group label {
+    font-size: 1.1em;
+    color: #f0f0f0;
+    white-space: normal;
+    line-height: 1.5;
+    margin-bottom: 5px;
+  }
+  .form-control {
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    width: 100%;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+  }
+  .btn-primary, .btn-secondary {
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 1.1em;
+    cursor: pointer;
+    margin: 5px;
+  }
+  .btn-primary {
+    background: #ffeb3b;
+    color: #1a237e;
+  }
+  .btn-primary:hover {
+    background: #fdd835;
+  }
+  .btn-secondary {
+    background: #e57373;
+    color: #fff;
+  }
+  .btn-secondary:hover {
+    background: #ef5350;
+  }
+  /* Ordered list styling for labels */
+  ol.label-list {
+    padding-left: 40px;
+  }
+  ol.label-list li {
+    margin-bottom: 8px;
+  }
+  /* Hide Remove Data Section by default */
+  #removeDataSection {
+    display: none;
+    margin-top: 20px;
+  }
+</style>
+
+<div class="big-card">
+  <div class="config-card">
+    <h2>Train Model</h2>
+    {% if result == "no Data" %}
+      <p style="text-align: center;">please collect data</p>
+    {% elif result == "Training Started" or result == "Invalid index" %}
+      <p style="text-align: center;">{{ result }}</p>
+      {% if labels %}
+        <h3 style="text-align: center;">Available Labels:</h3>
+        <ol class="label-list">
+          {% for label in labels %}
+            <li>{{ label }}</li>
+          {% endfor %}
+        </ol>
+      {% endif %}
+    {% else %}
+      {% if removal_message %}
+        <script>
+          window.onload = function() {
+            alert("{{ removal_message }}");
+          }
+        </script>
+      {% endif %}
+      {% if labels and labels|length > 0 %}
+        <h3 style="text-align: center;">Available Labels:</h3>
+        <ol class="label-list">
+          {% for label in labels %}
+            <li>{{ label }}</li>
+          {% endfor %}
+        </ol>
+        <form method="POST" id="trainForm">
+          <div class="form-group" style="text-align: center;">
+            <button type="submit" name="action" value="train" class="btn btn-primary">Train Model</button>
+            <button type="button" id="removeDataButton" class="btn btn-secondary">Remove Data</button>
+          </div>
+          <div id="removeDataSection">
+            <div class="form-group" style="text-align: center;">
+              <input type="number" name="remove_index" class="form-control" placeholder="Enter the index of the label you want to remove" min="1" max="{{ labels|length }}">
+            </div>
+            <div class="form-group" style="text-align: center;">
+              <button type="submit" name="action" value="remove" class="btn btn-primary">Confirm</button>
+              <button type="button" id="cancelRemove" class="btn btn-secondary">Cancel</button>
+            </div>
+          </div>
+        </form>
+      <!-- {% else %}
+        <p style="text-align: center;">please collect data</p>
+      {% endif %} -->
+    {% endif %}
+  </div>
+</div>
+
+
+<script>
+  const removeDataButton = document.getElementById('removeDataButton');
+  const removeDataSection = document.getElementById('removeDataSection');
+  const cancelRemove = document.getElementById('cancelRemove');
+  const trainForm = document.getElementById('trainForm');
+  const maxIndex = {% if labels %}{{ labels|length }}{% else %}0{% endif %};
+
+  if (removeDataButton) {
+    removeDataButton.addEventListener('click', () => {
+      removeDataSection.style.display = 'block';
+    });
+  }
+  
+  if (cancelRemove) {
+    cancelRemove.addEventListener('click', () => {
+      removeDataSection.style.display = 'none';
+      document.querySelector('input[name="remove_index"]').value = '';
+    });
+  }
+  
+  if (trainForm) {
+    trainForm.addEventListener('submit', function(e) {
+      const activeElement = document.activeElement;
+      // Check remove action
+      if (activeElement && activeElement.name === "action" && activeElement.value === "remove") {
+        const inputField = document.querySelector('input[name="remove_index"]');
+        const inputVal = parseInt(inputField.value, 10);
+        if (isNaN(inputVal) || inputVal < 1 || inputVal > maxIndex) {
+          alert("Please enter a number between 1 and " + maxIndex);
+          e.preventDefault();
+        }
+        return;
+      }
+      // Check train action and require at least 2 labels
+      if (activeElement && activeElement.name === "action" && activeElement.value === "train") {
+        if (maxIndex < 2) {
+          alert("Please collect at least 2 labels before training.");
+          e.preventDefault();
+        }
+      }
+    });
+  }
+</script>
+
+
+
+<!-- <script>
+  const removeDataButton = document.getElementById('removeDataButton');
+  const removeDataSection = document.getElementById('removeDataSection');
+  const cancelRemove = document.getElementById('cancelRemove');
+  const trainForm = document.getElementById('trainForm');
+  const maxIndex = {% if labels %}{{ labels|length }}{% else %}0{% endif %};
+
+  if (removeDataButton) {
+    removeDataButton.addEventListener('click', () => {
+      removeDataSection.style.display = 'block';
+    });
+  }
+  
+  if (cancelRemove) {
+    cancelRemove.addEventListener('click', () => {
+      removeDataSection.style.display = 'none';
+      document.querySelector('input[name="remove_index"]').value = '';
+    });
+  }
+  
+  if (trainForm) {
+    trainForm.addEventListener('submit', function(e) {
+      const activeElement = document.activeElement;
+      if (activeElement && activeElement.name === "action" && activeElement.value === "remove") {
+        const inputField = document.querySelector('input[name="remove_index"]');
+        const inputVal = parseInt(inputField.value, 10);
+        if (isNaN(inputVal) || inputVal < 1 || inputVal > maxIndex) {
+          alert("Please enter a number between 1 and " + maxIndex);
+          e.preventDefault();
+        }
+      }
+    });
+    if (activeElement && activeElement.name === "action" && activeElement.value === "train") {
+        if (maxIndex < 2) {
+          alert("Please collect at least 2 labels before training.");
+          e.preventDefault();
+        }
+  } -->
+</script>
+{% endblock %}

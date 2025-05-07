@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  /* Big Outer Card */
+  .big-card {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px;
+    background: linear-gradient(135deg, #1a237e, #7b1fa2);
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    color: #fff;
+    transition: background 0.3s, border 0.3s, color 0.3s;
+  }
+  /* Title Card */
+  .title-card {
+    text-align: center;
+    padding: 30px;
+    border: 3px solid #ffffff;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .title-card h1 {
+    font-size: 3em;
+    color: #ffeb3b;
+    margin-bottom: 10px;
+  }
+  .title-card p {
+    font-size: 1.3em;
+    color: #f0f0f0;
+    margin-bottom: 10px;
+  }
+  /* Models Summary Card */
+  .models-summary-card {
+    background: rgba(26, 35, 126, 0.90);
+    border: 3px solid #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+    transition: transform 0.3s, background 0.3s;
+  }
+  .models-summary-card:hover {
+    transform: translateY(-3px);
+    background: rgba(26, 35, 126, 1);
+  }
+  .models-summary-card h2 {
+    color: #ffeb3b;
+    font-size: 2em;
+    margin-bottom: 15px;
+  }
+  .models-summary-card ol {
+    list-style: decimal;
+    padding-left: 20px;
+    text-align: left;
+    display: inline-block;
+  }
+  .models-summary-card li {
+    margin: 10px 0;
+  }
+  .models-summary-card a {
+    color: #ffeb3b;
+    font-size: 1.2em;
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .models-summary-card a:hover {
+    color: #e0e0e0;
+  }
+  /* Detailed Model Cards */
+  .model-detail-card {
+    background: rgba(26, 35, 126, 0.90);
+    border: 3px solid #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: transform 0.3s, background 0.3s;
+  }
+  .model-detail-card:hover {
+    transform: translateY(-3px);
+    background: rgba(26, 35, 126, 1);
+  }
+  .model-detail-card h3 {
+    color: #ffeb3b;
+    font-size: 1.8em;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .model-detail-card p {
+    margin-bottom: 10px;
+    /* Justified text with the last line centered */
+    text-align: justify;
+    text-align-last: center;
+  }
+  .model-detail-card ul {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .model-detail-card li {
+    font-size: 1em;
+    line-height: 1.6;
+    margin-bottom: 5px;
+    color: #f0f0f0;
+  }
+  /* Performance Metrics Container */
+  .performance-metrics {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 20px;
+    margin: 20px 0;
+    overflow-x: auto;
+    list-style: none;
+    padding: 0;
+  }
+  .performance-metrics li {
+    font-size: 1em;
+    font-weight: bold;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .model-images, .model-extra {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .model-images img, .model-extra img {
+    max-width: 45%;
+    border-radius: 4px;
+    border: 2px solid #ffffff;
+  }
+  /* Enlarged static image for Mediapipe card */
+  #mediapipe .model-extra img {
+    max-width: 80%;
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+  /* Dark Mode Adjustments */
+  body.dark-mode .big-card {
+    background: linear-gradient(135deg, #1e1e3f, #0d1137);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+  }
+  body.dark-mode .title-card h1 {
+    color: #ffeb3b;
+  }
+  body.dark-mode .title-card p {
+    color: #e0e0e0;
+  }
+  body.dark-mode .models-summary-card {
+    background: rgba(29, 29, 55, 0.95);
+    border: 3px solid #00e5ff;
+  }
+  body.dark-mode .models-summary-card h2 {
+    color: #00e5ff;
+  }
+  body.dark-mode .models-summary-card a {
+    color: #00e5ff;
+  }
+  body.dark-mode .model-detail-card {
+    background: rgba(29, 29, 55, 0.95);
+    border: 3px solid #00e5ff;
+  }
+  body.dark-mode .model-detail-card h3 {
+    color: #00e5ff;
+  }
+  body.dark-mode .model-detail-card li {
+    color: #e0e0e0;
+  }
+</style>
+
+<div class="big-card">
+  <!-- Title Card -->
+  <div class="title-card">
+    <h1>Documentation</h1>
+    <p>Learn more about our Sign Language Recognition System, including setup, usage, and advanced features.</p>
+    <p>This documentation offers a comprehensive guide covering installation, configuration, and insights into the technology powering the system.</p>
+  </div>
+  
+  <!-- Models Summary Card with Numeric Bullets -->
+  <div class="models-summary-card" id="models-used">
+    <h2>Models Used</h2>
+    <p>Click on a model below to view its detailed performance and visualizations:</p>
+    <ol>
+      <li><a href="#mediapipe">Mediapipe</a></li>
+      <li><a href="#svc">SVC</a></li>
+      <li><a href="#random-forest">Random Forest</a></li>
+      <li><a href="#gradient-boost">Gradient Boost</a></li>
+      <li><a href="#logistic-regression">Logistic Regression</a></li>
+    </ol>
+  </div>
+  
+  <!-- Detailed Mediapipe Model Card -->
+  <div class="model-detail-card" id="mediapipe">
+    <h3>Mediapipe</h3>
+    <p>
+      The MediaPipe Hand Landmarker task lets you detect the landmarks of the hands in an image. You can use this task to locate key points of hands and render visual effects on them. This task operates on image data with a machine learning (ML) model as static data or a continuous stream and outputs hand landmarks in image coordinates, hand landmarks in world coordinates and handedness(left/right hand) of multiple detected hands.
+    </p>
+    <p>
+      The hand landmark model bundle detects the keypoint localization of 21 hand-knuckle coordinates within the detected hand regions. The model was trained on approximately 30K real-world images, as well as several rendered synthetic hand models imposed over various backgrounds.
+    </p>
+    <div class="model-extra">
+      <img src="{{ url_for('static', filename='model/mediapipe/hand_landmarks.png') }}" alt="Hand Landmarks">
+    </div>
+    <p>
+      The hand landmarker model bundle contains a palm detection model and a hand landmarks detection model. The Palm detection model locates hands within the input image, and the hand landmarks detection model identifies specific hand landmarks on the cropped hand image defined by the palm detection model.
+    </p>
+    <p>
+      Since running the palm detection model is time consuming, when in video or live stream running mode, Hand Landmarker uses the bounding box defined by the hand landmarks model in one frame to localize the region of hands for subsequent frames. Hand Landmarker only re-triggers the palm detection model if the hand landmarks model no longer identifies the presence of hands or fails to track the hands within the frame. This reduces the number of times Hand Landmarker tiggers the palm detection model.
+    </p>
+  </div>
+  
+  <!-- Detailed SVC Model Card with Combined Description -->
+  <div class="model-detail-card" id="svc">
+    <h3>SVC</h3>
+    <p>
+      <strong>Description:</strong> The Support Vector Classifier (SVC) is employed for classifying static hand gestures using a well-defined hyperplane. SVC works by finding an optimal hyperplane that separates different gesture classes with maximum margin. By employing kernel functions, SVC can handle non-linearly separable data effectively, making it a robust choice for static gesture classification.
+    </p>
+    <ul class="performance-metrics">
+      <li><strong>Accuracy:</strong> 98%</li>
+      <li><strong>F1 Score:</strong> 95%</li>
+      <li><strong>Precision:</strong> 94%</li>
+      <li><strong>Recall:</strong> 93%</li>
+    </ul>
+  </div>
+  
+  <!-- Detailed Random Forest Model Card with Extended Description -->
+  <div class="model-detail-card" id="random-forest">
+    <h3>Random Forest</h3>
+    <p>
+      <strong>Description:</strong> Random Forest aggregates multiple decision trees to provide robust classification of hand gestures. As an ensemble method, it reduces overfitting by combining the outputs of many trees, capturing complex patterns in the gesture data and improving classification stability.
+    </p>
+    <ul class="performance-metrics">
+      <li><strong>Accuracy:</strong> 96%</li>
+      <li><strong>F1 Score:</strong> 95%</li>
+      <li><strong>Precision:</strong> 94%</li>
+      <li><strong>Recall:</strong> 93%</li>
+    </ul>
+  </div>
+  
+  <!-- Detailed Gradient Boost Model Card with Extended Description -->
+  <div class="model-detail-card" id="gradient-boost">
+    <h3>Gradient Boost</h3>
+    <p>
+      <strong>Description:</strong> Gradient Boosting builds models sequentially to correct previous errors, thereby enhancing overall performance. Each new model focuses on the mistakes of its predecessor, resulting in a highly accurate model especially effective for complex, non-linear classification challenges.
+    </p>
+    <ul class="performance-metrics">
+      <li><strong>Accuracy:</strong> 97%</li>
+      <li><strong>F1 Score:</strong> 96%</li>
+      <li><strong>Precision:</strong> 95%</li>
+      <li><strong>Recall:</strong> 95%</li>
+    </ul>
+  </div>
+  
+  <!-- Detailed Logistic Regression Model Card with Extended Description -->
+  <div class="model-detail-card" id="logistic-regression">
+    <h3>Logistic Regression</h3>
+    <p>
+      <strong>Description:</strong> Logistic Regression is a linear model effective for binary classification in gesture recognition tasks. Despite its simplicity, it provides fast and interpretable predictions by estimating probabilities, serving as a reliable baseline with balanced performance and computational efficiency.
+    </p>
+    <ul class="performance-metrics">
+      <li><strong>Accuracy:</strong> 94%</li>
+      <li><strong>F1 Score:</strong> 93%</li>
+      <li><strong>Precision:</strong> 92%</li>
+      <li><strong>Recall:</strong> 91%</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

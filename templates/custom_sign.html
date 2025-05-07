@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  /* Big Outer Card */
+  .big-card {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px;
+    background: linear-gradient(135deg, #1a237e, #7b1fa2);
+    border: 3px solid rgba(255,255,255,0.5);
+    border-radius: 12px;
+    color: #fff;
+    transition: background 0.3s, border 0.3s, color 0.3s;
+  }
+  /* Title Card */
+  .title-card {
+    text-align: center;
+    padding: 30px;
+    border: 3px solid #ffffff;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .title-card h2 {
+    font-size: 2.5em;
+    color: #ffeb3b;
+    margin-bottom: 10px;
+  }
+  /* Video Wrapper */
+  .video-wrapper {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  /* Video Container */
+  .video-container {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .video-container img {
+    width: 100%;
+    display: block;
+  }
+  /* Placeholder overlay */
+  #videoPlaceholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(220,220,220,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #555;
+    z-index: 2;
+  }
+  /* Input Container */
+  .input-container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+  .input-container input[type="text"] {
+    flex: 1;
+    padding: 12px 15px;
+    font-size: 18px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    transition: border 0.3s, box-shadow 0.3s;
+    box-sizing: border-box;
+  }
+  .input-container input[type="text"]:focus {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.2);
+    outline: none;
+  }
+  .input-container button {
+    padding: 12px 25px;
+    font-size: 18px;
+    border: none;
+    border-radius: 6px;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+  .input-container button:hover {
+    background-color: #0056b3;
+    transform: scale(1.02);
+  }
+  /* Counter Styling */
+  #counter {
+    margin-top: 10px;
+    font-size: 18px;
+    color: #ffeb3b;
+    font-weight: 600;
+  }
+  /* Dark Mode Adjustments */
+  body.dark-mode .big-card {
+    background: linear-gradient(135deg, #1e1e3f, #0d1137);
+    border: 3px solid rgba(255,255,255,0.3);
+    color: #e0e0e0;
+  }
+  body.dark-mode .title-card h2 {
+    color: #00e5ff;
+  }
+</style>
+
+<div class="big-card">
+  <!-- Title Card -->
+  <div class="title-card">
+    <h2>Custom Sign</h2>
+    <p class="hint">Press Ctrl+Enter to capture keypoints</p>
+  </div>
+  
+  <!-- Video & Controls -->
+  <div class="video-wrapper">
+    <div class="video-container">
+      <!-- Placeholder overlay -->
+      <div id="videoPlaceholder">Loading Video...</div>
+      <!-- MJPEG stream -->
+      <img id="videoFeed" src="{{ url_for('video_feed') }}?landmarks=1" alt="Live Video Feed" onload="hidePlaceholder()">
+    </div>
+    <div class="input-container">
+      <input type="text" id="customText" placeholder="Enter your text here..." />
+      <button onclick="clearText()">Clear</button>
+    </div>
+    <!-- Counter element for countdown -->
+    <div id="counter"></div>
+  </div>
+</div>
+
+
+
+<script>
+  // Hide placeholder once video loads.
+  function hidePlaceholder() {
+    document.getElementById('videoPlaceholder').style.display = 'none';
+  }
+  
+  // Clear the input field and counter text.
+  function clearText() {
+    document.getElementById('customText').value = "";
+    document.getElementById('counter').innerText = "";
+  }
+  
+  // Listen for Ctrl+Enter key press in the text input.
+  document.getElementById('customText').addEventListener('keydown', function(event) {
+    if (event.ctrlKey && event.key === 'Enter') {
+      event.preventDefault();
+      const counterElement = document.getElementById('counter');
+      const text = document.getElementById('customText').value;
+
+      // Validate input: only proceed on Ctrl+Enter
+      if (!text.trim()) {
+        counterElement.innerText = "Please enter text before sending.";
+        setTimeout(() => { counterElement.innerText = ""; }, 2000);
+        return;
+      }
+
+      // Begin 2-second countdown before sending
+      let countdown = 2;
+      counterElement.innerText = `Sending in ${countdown} second${countdown > 1 ? 's' : ''}...`;
+      const timer2 = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+          counterElement.innerText = `Sending in ${countdown} second${countdown > 1 ? 's' : ''}...`;
+        } else {
+          clearInterval(timer2);
+
+          // Send the text payload to the server
+          fetch("{{ url_for('update_text') }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text })
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log("Text sent:", data);
+
+            // Overlay active countdown (10s)
+            let overlayCountdown = 10;
+            counterElement.innerText = `Overlay active for ${overlayCountdown} second${overlayCountdown > 1 ? 's' : ''}`;
+            const timer10 = setInterval(() => {
+              overlayCountdown--;
+              if (overlayCountdown > 0) {
+                counterElement.innerText = `Overlay active for ${overlayCountdown} second${overlayCountdown > 1 ? 's' : ''}`;
+              } else {
+                clearInterval(timer10);
+                counterElement.innerText = "";
+                document.getElementById('customText').value = "";
+              }
+            }, 1000);
+          })
+          .catch(error => {
+            console.error("Error sending text:", error);
+            counterElement.innerText = "";
+          });
+        }
+      }, 1000);
+    }
+  });
+</script>
+{% endblock %}
+
