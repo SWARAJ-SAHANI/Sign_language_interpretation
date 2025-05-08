@@ -219,6 +219,25 @@
       .finally(() => {isSpeaking = false;});
     }
   };
+
+  // eventSource.onmessage = function(event) {
+  //   const newText = event.data;
+  //   document.getElementById('mlResultText').innerText = newText;
+    
+  //   if (audioEnabled && newText.trim() !== "" &&
+  //       !newText.trim().startsWith("Waiting for") &&
+  //       newText !== lastSpokenText) {
+  //     lastSpokenText = newText;
+  //     fetch("{{ url_for('speak') }}", {
+  //       method: "POST",
+  //       headers: {"Content-Type": "application/json"},
+  //       body: JSON.stringify({text: newText})
+  //     })
+  //     .then(response => response.json())
+  //     .then(data => console.log("Spoken:", data))
+  //     .catch(error => console.error("Error speaking text:", error))
+  //   }
+  // };
   
   eventSource.onerror = function(event) {
     console.error("SSE error:", event);
