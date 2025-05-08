@@ -196,38 +196,17 @@
 
 
 
-
-
-  // // Toggle audio functionality.
-  // let audioEnabled = true;
-  // let lastSpokenText = "";
-  // function toggleAudio(){
-  //   audioEnabled = !audioEnabled;
-  //   const audioButton = document.getElementById('toggleAudio');
-  //   const audioIcon = audioButton.querySelector('i');
-  //   if(audioEnabled){
-  //     audioIcon.classList.remove('fa-volume-mute');
-  //     audioIcon.classList.add('fa-volume-up');
-  //     audioButton.classList.remove('btn-danger');
-  //     audioButton.classList.add('btn-success');
-  //   } else {
-  //     audioIcon.classList.remove('fa-volume-up');
-  //     audioIcon.classList.add('fa-volume-mute');
-  //     audioButton.classList.remove('btn-success');
-  //     audioButton.classList.add('btn-danger');
-  //     lastSpokenText = "";
-  //   }
-  // }
-  
   // Listen for ML output via Server-Sent Events.
   const eventSource = new EventSource("{{ url_for('ml_stream') }}");
+  let isSpeaking = false;
   eventSource.onmessage = function(event) {
     const newText = event.data;
     document.getElementById('mlResultText').innerText = newText;
     
     if (audioEnabled && newText.trim() !== "" &&
         !newText.trim().startsWith("Waiting for") &&
-        newText !== lastSpokenText) {
+        newText !== lastSpokenText && !isSpeaking) {
+      isSpeaking = true;
       lastSpokenText = newText;
       fetch("{{ url_for('speak') }}", {
         method: "POST",
@@ -236,7 +215,8 @@
       })
       .then(response => response.json())
       .then(data => console.log("Spoken:", data))
-      .catch(error => console.error("Error speaking text:", error));
+      .catch(error => console.error("Error speaking text:", error))
+      .finally(() => {isSpeaking = false;});
     }
   };
   

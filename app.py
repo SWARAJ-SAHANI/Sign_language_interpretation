@@ -3,6 +3,7 @@ import time                             # For timing operations or expiration ch
 import threading                        # To handle concurrency (e.g., camera locking)
 from joblib import load                 # Joblib for loading serialized ML models and normalizers
 import pyttsx3                          # Text-to-speech conversion library
+import time
 
 # Custom preprocessing modules for image handling and training logic
 import preprocessing.image_processing as ip
@@ -135,15 +136,20 @@ def ml_stream():
     # Return the generator wrapped in a streaming response
     return Response(generate(), mimetype='text/event-stream')
 
+engine = pyttsx3.init()
+def speak_text(text):
+    engine.say(text)
+    engine.runAndWait()
+    engine.stop()
+    print(f"says text: {text}")
+    return
 
 @app.route('/speak', methods=['POST'])
 def speak():
     data = request.get_json()
     text = data.get('text', '')
     if text:
-        engine = pyttsx3.init()
-        engine.say(text)
-        engine.runAndWait()
+        speak_text(text)
     return jsonify({"status": "spoken", "text": text})
 # @app.route('/speak', methods=['POST'])
 # def speak():

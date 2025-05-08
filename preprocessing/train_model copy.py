@@ -30,12 +30,14 @@ move_destination = 'data'
 
 # Initialize dataframes and other storage variables
 df1 = df2 = None
+dataframes = []
 labels = None
 
 # Define the function to load custom keypoint data from CSV files
 def load_data():
-    global df1, df2  # Declare global variables for dataframes
+    global df1, df2, dataframes  # Declare global variables for dataframes
     df1 = df2 = None  # Initialize df1 and df2 as None to handle unassigned files
+    dataframes = []  # Initialize an empty list to hold dataframes
 
     # Define file paths for two specific custom keypoint CSV files
     custom_path1 = 'keypoints/1_custom_keypoint.csv'
@@ -49,96 +51,99 @@ def load_data():
     if os.path.exists(custom_path2):
         df2 = pd.read_csv(custom_path2, on_bad_lines='skip')  # Read the CSV file into df2
 
+    # Combine non-None dataframes into a list and assign it to the dataframes variable
+    dataframes = [df for df in [df1, df2] if df is not None]
+
 def clean_data():
     # Declare global variables so we can modify them inside this function
-    global df1, df2
+    global df1, df2, dataframes
 
     # Loop through each dataframe in the list
-    for df in [df1, df2]:
+    for df in dataframes:
         # Remove rows with any missing values (NaNs)
-        if df is not None:
-            df.dropna(inplace=True)
+        df.dropna(inplace=True)
 
-            # Remove duplicate rows
-            df.drop_duplicates(inplace=True)
+        # Remove duplicate rows
+        df.drop_duplicates(inplace=True)
 
-            # Define a condition to identify rows with non-zero wrist coordinates
-            # If the dataframe contains data for both wrists (left and right)
-            if '1_WRIST_x' in df.columns:
-                condition = (
-                    (df['0_WRIST_x'] != 0.0) | 
-                    (df['0_WRIST_y'] != 0.0) | 
-                    (df['1_WRIST_x'] != 0.0) | 
-                    (df['1_WRIST_y'] != 0.0)
-                )
-            else:
-                # If only one wrist is present, just check that one
-                condition = (
-                    (df['0_WRIST_x'] != 0.0) | 
-                    (df['0_WRIST_y'] != 0.0)
-                )
+        # Define a condition to identify rows with non-zero wrist coordinates
+        # If the dataframe contains data for both wrists (left and right)
+        if '1_WRIST_x' in df.columns:
+            condition = (
+                (df['0_WRIST_x'] != 0.0) | 
+                (df['0_WRIST_y'] != 0.0) | 
+                (df['1_WRIST_x'] != 0.0) | 
+                (df['1_WRIST_y'] != 0.0)
+            )
+        else:
+            # If only one wrist is present, just check that one
+            condition = (
+                (df['0_WRIST_x'] != 0.0) | 
+                (df['0_WRIST_y'] != 0.0)
+            )
 
-            # Drop rows where any of the wrist coordinates are non-zero
-            df.drop(df[condition].index, inplace=True)
+        # Drop rows where any of the wrist coordinates are non-zero
+        df.drop(df[condition].index, inplace=True)
 
-            # Reset index after dropping rows to keep it clean and continuous
-            df.reset_index(drop=True, inplace=True)
+        # Reset index after dropping rows to keep it clean and continuous
+        df.reset_index(drop=True, inplace=True)
 
 def create_label():
     # Declare global variables to access and modify them within the function
-    global df1, df2
+    global df1, df2, dataframes
 
-    dataframes = [df1, df2]
     # Loop through each dataframe
-    for i in range(len(dataframes)):
-        if isinstance(dataframes[i], pd.DataFrame):
-            # Initialize label encoder
-            le = LabelEncoder()
+    for df in dataframes:
+        # Initialize label encoder
+        le = LabelEncoder()
 
-            # Encode string labels into integers and assign back to the 'label' column
-            dataframes[i]['label'] = le.fit_transform(dataframes[i]['label'])
+        # Encode string labels into integers and assign back to the 'label' column
+        df['label'] = le.fit_transform(df['label'])
 
-            # Determine the path to save class labels based on number of features (single or double hand)
-            if len(dataframes[i].columns) > 44:
-                path = "final_models/custom_signs/labels/2_custom_label.txt"  # For two-hand keypoints
-            else:
-                path = "final_models/custom_signs/labels/1_custom_label.txt"  # For single-hand keypoints 
+        # Determine the path to save class labels based on number of features (single or double hand)
+        if len(df.columns) > 44:
+            path = "final_models/custom_signs/labels/2_custom_label.txt"  # For two-hand keypoints
+        else:
+            path = "final_models/custom_signs/labels/1_custom_label.txt"  # For single-hand keypoints
 
-            # Write the class labels (original string form) to a text file
-            with open(path, 'w') as f:
-                for label in le.classes_:
-                    f.write(f"{label}\n")
-    df1, df2 = dataframes
+        # if len(df.columns) > 44:
+        #     path = "2_custom_label.txt"
+        # else:
+        #     path = "1_custom_label.txt" 
+
+        # Write the class labels (original string form) to a text file
+        with open(path, 'w') as f:
+            for label in le.classes_:
+                f.write(f"{label}\n")
 
 def display_signs():
+    # Access the global dataframes list
+    global dataframes
+
     # Initialize an empty list to store unique labels
     labels_list = []
 
     # Loop through each dataframe
-    for df in [df1, df2]:
-        if df is not None:
-            # Loop through unique labels in the 'label' column
-            for label in df['label'].unique():
-                # Add label to the list if it's not already included
-                if label not in labels_list:
-                    labels_list.append(label)
+    for df in dataframes:
+        # Loop through unique labels in the 'label' column
+        for label in df['label'].unique():
+            # Add label to the list if it's not already included
+            if label not in labels_list:
+                labels_list.append(label)
 
     # Return the list of unique labels found across all dataframes
     return labels_list
 
 def remove_data(drop_label_index):
     # Access global variables
-    global labels
+    global dataframes, labels
 
     # Get the label value to drop based on the provided index
     drop_label = labels[drop_label_index]
 
-    dataframes = [df1, df2]
     # Loop through each dataframe and remove rows with the specified label
     for i in range(len(dataframes)):
-        if isinstance(dataframes[i], pd.DataFrame):
-            dataframes[i] = dataframes[i][dataframes[i]['label'] != drop_label]
-    df1, df2 = dataframes
+        dataframes[i] = dataframes[i][dataframes[i]['label'] != drop_label]
 
 # Define a function to move and rename files from source to destination
 def move_file():
@@ -194,20 +199,18 @@ def evaluate_model(x_train_norm, x_test_norm, y_train, y_test):
     # Loop through all models defined in the global 'models' dictionary
     for model in models.values():
         # Train the model on the training data
-        try:
-            model.fit(x_train_norm, y_train)
-            # Predict labels for the test data
-            y_pred = model.predict(x_test_norm)
+        model.fit(x_train_norm, y_train)
 
-            # Calculate accuracy for the model
-            accuracy = accuracy_score(y_test, y_pred)
+        # Predict labels for the test data
+        y_pred = model.predict(x_test_norm)
 
-            # Update best model if current model has higher accuracy
-            if accuracy > best_accuracy:
-                best_accuracy = accuracy
-                best_model = model
-        except:
-            return None
+        # Calculate accuracy for the model
+        accuracy = accuracy_score(y_test, y_pred)
+
+        # Update best model if current model has higher accuracy
+        if accuracy > best_accuracy:
+            best_accuracy = accuracy
+            best_model = model
 
     # Return the best performing model
     return best_model
@@ -217,38 +220,44 @@ def train_model():
     global df1, df2, dataframes
 
     # Loop through each dataset (assumed to be for different hand types)
-    for df in [df1,df2]:
-        if df is not None:
-            # Split features and labels
-            x = df.drop(columns=['label'])
-            y = df['label']
-            
-            # Split data into training and testing sets (15% for testing)
-            x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.15, random_state=42)
-            
-            # Normalize the feature values using MinMaxScaler
-            minmax = MinMaxScaler()
-            x_train_norm = minmax.fit_transform(x_train)
-            x_test_norm = minmax.transform(x_test)
-            
-            # Train and evaluate multiple models to select the best one
-            best_model = evaluate_model(x_train_norm, x_test_norm, y_train, y_test)
+    for df in dataframes:
+        # Split features and labels
+        x = df.drop(columns=['label'])
+        y = df['label']
+        
+        # Split data into training and testing sets (15% for testing)
+        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.15, random_state=42)
+        
+        # Normalize the feature values using MinMaxScaler
+        minmax = MinMaxScaler()
+        x_train_norm = minmax.fit_transform(x_train)
+        x_test_norm = minmax.transform(x_test)
+        
+        # Train and evaluate multiple models to select the best one
+        best_model = evaluate_model(x_train_norm, x_test_norm, y_train, y_test)
 
-            # Check if the dataframe has double-hand keypoints (more than 44 features)
-            if best_model is None:
-                return
-            if len(df.columns) > 44:
-                # Save the best model and normalizer for double-hand gestures
-                dump(best_model, "final_models/custom_signs/models/2_custom_model.joblib")
-                dump(minmax, "final_models/custom_signs/normalizers/2_custom_normalizer.joblib")
-            else:
-                # Save the best model and normalizer for single-hand gestures
-                dump(best_model, "final_models/custom_signs/models/1_custom_model.joblib")
-                dump(minmax, "final_models/custom_signs/normalizers/1_custom_normalizer.joblib")
+        # Check if the dataframe has double-hand keypoints (more than 44 features)
+        if len(df.columns) > 44:
+            # Save the best model and normalizer for double-hand gestures
+            dump(best_model, "final_models/custom_signs/models/2_custom_model.joblib")
+            dump(minmax, "final_models/custom_signs/normalizers/2_custom_normalizer.joblib")
+        else:
+            # Save the best model and normalizer for single-hand gestures
+            dump(best_model, "final_models/custom_signs/models/1_custom_model.joblib")
+            dump(minmax, "final_models/custom_signs/normalizers/1_custom_normalizer.joblib")
+
+        # if len(df.columns) > 44:
+        #     # Save the best model and normalizer for double-hand gestures
+        #     dump(best_model, "2_custom_model.joblib")
+        #     dump(minmax, "2_custom_normalizer.joblib")
+        # else:
+        #     # Save the best model and normalizer for single-hand gestures
+        #     dump(best_model, "1_custom_model.joblib")
+        #     dump(minmax, "1_custom_normalizer.joblib")
 
 # Define the main function with optional parameters for button click and removal index
 def main(train_button=False, remove_index=None):
-    global df1, df2, labels, load_once  # Declare global variables to be used inside the function
+    global df1, df2, dataframes, labels, load_once  # Declare global variables to be used inside the function
 
     # Load data if it hasn't been loaded already or if there are fewer than 2 labels
     if load_once or (len(labels) < 2):
@@ -258,8 +267,7 @@ def main(train_button=False, remove_index=None):
     labels = display_signs()  # Display available labels (for signs)
 
     # Check if there are no dataframes or labels are empty or None
-    # if (df1 is None) or (df2 is None)
-    if ((df1 is None) and (df2 is None)) or (len(labels) == 0) or (labels is None) or (labels == []):
+    if (not dataframes) or (len(labels) == 0) or (labels is None):
         return 'no Data'  # Return a message indicating no data is available
 
     # If a removal index is provided, remove the data at that index
