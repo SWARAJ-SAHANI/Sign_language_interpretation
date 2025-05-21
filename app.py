@@ -1,9 +1,10 @@
 from flask import Flask, render_template, Response, request, redirect, url_for, jsonify     # Flask framework imports for web app functionality
 import time                             # For timing operations or expiration checks
-import threading                        # To handle concurrency (e.g., camera locking)
+from threading import Timer             # To handle concurrency (e.g., camera locking)
 from joblib import load                 # Joblib for loading serialized ML models and normalizers
 import pyttsx3                          # Text-to-speech conversion library
 import time
+from multiprocessing import Process
 
 # Custom preprocessing modules for image handling and training logic
 import preprocessing.image_processing as ip
@@ -15,11 +16,14 @@ from load_models import load_all_categories
 # Load all pre-trained models, normalizers, and label lists for each category (e.g., single/double hand)
 loaded_models = load_all_categories()
 
-# Initialize the pyttsx3 engine for text-to-speech functionality
-engine = pyttsx3.init()
-
 # Variable to speak
 say_text = True
+
+# Timer object used to control or delay speech output
+_say_timer = None
+
+# Stores the last text that was spoken to avoid repetition
+_last_text = ""
 
 # List of available sign language model categories for selection/display
 model_category = ['numbers', 'alphabets', 'simple_signs', 'custom_signs']
@@ -136,35 +140,70 @@ def ml_stream():
     # Return the generator wrapped in a streaming response
     return Response(generate(), mimetype='text/event-stream')
 
-engine = pyttsx3.init()
-def speak_text(text):
-    engine.say(text)
-    engine.runAndWait()
-    engine.stop()
-    print(f"says text: {text}")
-    return
+
+# A placeholder function named 'dummy' that simply prints the string 'dummy'
+def dummy():
+    print('dummy')
+
+
+# Function to handle speech output in a separate process
+def _fire_say():
+    global _last_text  # Access the global variable that holds the last spoken text
+
+    # Create a new process to run the speech_worker function with _last_text as argument
+    p = Process(target=speech_worker, args=(_last_text,))
+    p.daemon = True  # Set the process as a daemon so it will close when the main program exits
+    p.start()  # Start the process
+
+    # Wait for the process to complete for up to 0.5 seconds
+    p.join(0.5)
+
+    # If the process is still running after 0.5 seconds, terminate it
+    if p.is_alive():
+        p.terminate()  # Forcefully stop the process
+        p.join()       # Ensure the process has finished cleanup
+
+    # Call speech_worker directly as a fallback or additional step
+    speech_worker(_last_text)
+
+
+
+# Function to perform text-to-speech using the pyttsx3 library
+def speech_worker(text):
+    engine = pyttsx3.init()  # Initialize the text-to-speech engine
+    print('done speaking the text ', text)  # Print the text being spoken (for debugging/logging)
+    engine.say(text)  # Queue the text to be spoken
+    engine.runAndWait()  # Run the speech engine and wait until speaking is finished
+
 
 @app.route('/speak', methods=['POST'])
+# Function to handle incoming speech requests and manage delayed speech execution
 def speak():
-    data = request.get_json()
-    text = data.get('text', '')
-    if text:
-        speak_text(text)
-    return jsonify({"status": "spoken", "text": text})
-# @app.route('/speak', methods=['POST'])
-# def speak():
-#     if say_text:
-#         engine = pyttsx3.init()
-#         try:
-#             data = request.get_json()
-#             text = data.get('text', '')
-#             if text:
-#                 engine.say(text)
-#                 engine.runAndWait()
-#                 print('done')
-#         except Exception as e:
-#             print("audio error, ", e)
-#         return jsonify({"status": "spoken", "text": text})
+    global _say_timer, _last_text  # Access global variables for the timer and last spoken text
+
+    if say_text:  # Check if speech functionality is enabled
+        data = request.get_json()  # Parse incoming JSON data from the request
+        text = data.get('text', '')  # Extract the 'text' field, default to empty string if missing
+
+        if not text:
+            # Return an error response if no text is provided
+            return jsonify({"status": "no text"}), 400
+
+        dummy()  # Call the dummy function (possibly for logging or testing)
+
+        if _say_timer:
+            _say_timer.cancel()  # Cancel any previously scheduled speech task
+
+        _last_text = text  # Update the global text to be spoken
+
+        # Create a new timer to call _fire_say after 0.5 seconds
+        _say_timer = Timer(0.5, _fire_say)
+        _say_timer.daemon = True  # Set the timer as a daemon thread
+        _say_timer.start()  # Start the timer
+
+        # Return a success response indicating the speech task was queued
+        return jsonify({"status": "queued", "text": text})
+
 
 # Route for handling the custom model training interface
 @app.route('/train_model', methods=['GET', 'POST'])
