@@ -12,9 +12,6 @@ from sklearn.linear_model import LogisticRegression             # Logistic Regre
 # Set to True to load the CSV file only once and avoid reloading multiple times
 load_once = True
 
-# Counters to track how many single-hand and double-hand files already exist
-total_single_file = 0
-total_double_file = 0
 
 # Initialize machine learning models with fixed random states for reproducibility
 svm = SVC(random_state=42)                         # Support Vector Classifier
@@ -132,7 +129,7 @@ def display_signs():
 
 def remove_data(drop_label_index):
     # Access global variables
-    global labels
+    global labels, df1, df2
 
     # Get the label value to drop based on the provided index
     drop_label = labels[drop_label_index]
@@ -146,16 +143,20 @@ def remove_data(drop_label_index):
 
 # Define a function to move and rename files from source to destination
 def move_file():
-    global total_single_file, total_double_file
     # Define the path where files will be moved to
     path = 'data'
 
+    # Counters to track how many single-hand and double-hand files already exist
+    total_single_file = 0
+    total_double_file = 0
+
     # First, count existing files in the destination directory to avoid overwriting
     for filename in os.listdir(path):
-        if filename.startswith('1_custom_keypoint'):  # Check if the file is for single-hand data
+        if filename.startswith('1_custom'):  # Check if the file is for single-hand data
             total_single_file += 1  # Increment counter for single-hand files
-        if filename.startswith('2_custom_keypoint'):  # Check if the file is for double-hand data
+        if filename.startswith('2_custom'):  # Check if the file is for double-hand data
             total_double_file += 1  # Increment counter for double-hand files
+    print('the file length',total_single_file, total_double_file)
 
     # Move files from the source directory to the destination directory, renaming to avoid conflicts
     for filename in os.listdir(move_source):
@@ -170,6 +171,7 @@ def move_file():
             df1.to_csv(destination_path)  # Save the dataframe to a new location
 
             total_single_file += 1  # Increment the counter for single-hand files
+            print("the file",destination_path)
 
         elif filename.startswith('2_custom_keypoint'):  # Check if the file is for double-hand data
             # Set up source and new destination path with updated filename to avoid conflict
