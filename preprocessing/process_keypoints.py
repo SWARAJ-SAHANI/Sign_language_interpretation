@@ -99,7 +99,8 @@ def gen_result(row, model, normalizer, label_list):
         # Map the predicted index to the actual label string
         result = label_list[i][res_idx]
 
-    except:
+    except Exception as e:
+        print("the result error: ",e)
         # If any error occurs (e.g., shape mismatch, model/normalizer not ready), return default message
         result = 'Waiting for pose ....'
 

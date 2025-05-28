@@ -12,6 +12,10 @@ from sklearn.linear_model import LogisticRegression             # Logistic Regre
 # Set to True to load the CSV file only once and avoid reloading multiple times
 load_once = True
 
+# Counters to track how many single-hand and double-hand files already exist
+total_single_file = 0
+total_double_file = 0
+
 # Initialize machine learning models with fixed random states for reproducibility
 svm = SVC(random_state=42)                         # Support Vector Classifier
 rf = RandomForestClassifier(random_state=42)       # Random Forest Classifier
@@ -142,12 +146,9 @@ def remove_data(drop_label_index):
 
 # Define a function to move and rename files from source to destination
 def move_file():
+    global total_single_file, total_double_file
     # Define the path where files will be moved to
     path = 'data'
-
-    # Counters to track how many single-hand and double-hand files already exist
-    total_single_file = 0
-    total_double_file = 0
 
     # First, count existing files in the destination directory to avoid overwriting
     for filename in os.listdir(path):
@@ -187,6 +188,7 @@ def evaluate_model(x_train_norm, x_test_norm, y_train, y_test):
     Trains and evaluates multiple models on the given dataset,
     and returns the model with the highest accuracy.
     """
+    print(f"the received labels are {set(y_train.unique())}")
 
     best_model = None           # To store the best performing model
     best_accuracy = 0.0         # To track the highest accuracy achieved
@@ -206,15 +208,17 @@ def evaluate_model(x_train_norm, x_test_norm, y_train, y_test):
             if accuracy > best_accuracy:
                 best_accuracy = accuracy
                 best_model = model
-        except:
-            return None
+        except Exception as e:
+            print(f"the error: {e}")
+            print(f"the model is: {model}")
+            return best_model
 
     # Return the best performing model
     return best_model
 
 def train_model():
     # Access global dataframes
-    global df1, df2, dataframes
+    global df1, df2
 
     # Loop through each dataset (assumed to be for different hand types)
     for df in [df1,df2]:
@@ -222,7 +226,10 @@ def train_model():
             # Split features and labels
             x = df.drop(columns=['label'])
             y = df['label']
-            
+
+            print("the labels are ", set(y))
+            if len(y.unique()) <=1:
+                continue
             # Split data into training and testing sets (15% for testing)
             x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.15, random_state=42)
             
@@ -231,12 +238,14 @@ def train_model():
             x_train_norm = minmax.fit_transform(x_train)
             x_test_norm = minmax.transform(x_test)
             
+            print("data given to train")
             # Train and evaluate multiple models to select the best one
             best_model = evaluate_model(x_train_norm, x_test_norm, y_train, y_test)
+            print('model received')
 
             # Check if the dataframe has double-hand keypoints (more than 44 features)
-            if best_model is None:
-                return
+            # if best_model is None:
+            #     return
             if len(df.columns) > 44:
                 # Save the best model and normalizer for double-hand gestures
                 dump(best_model, "final_models/custom_signs/models/2_custom_model.joblib")
