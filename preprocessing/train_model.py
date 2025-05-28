@@ -182,13 +182,14 @@ def move_file():
             df1.to_csv(destination_path)  # Save the dataframe to a new location
 
             total_double_file += 1  # Increment the counter for double-hand files
+    
 
 def evaluate_model(x_train_norm, x_test_norm, y_train, y_test):
     """
     Trains and evaluates multiple models on the given dataset,
     and returns the model with the highest accuracy.
     """
-    print(f"the received labels are {set(y_train.unique())}")
+    # print(f"the received labels are {set(y_train.unique())}")
 
     best_model = None           # To store the best performing model
     best_accuracy = 0.0         # To track the highest accuracy achieved
@@ -227,7 +228,7 @@ def train_model():
             x = df.drop(columns=['label'])
             y = df['label']
 
-            print("the labels are ", set(y))
+            # print("the labels are ", set(y))
             if len(y.unique()) <=1:
                 continue
             # Split data into training and testing sets (15% for testing)
@@ -238,14 +239,12 @@ def train_model():
             x_train_norm = minmax.fit_transform(x_train)
             x_test_norm = minmax.transform(x_test)
             
-            print("data given to train")
+            # print("data given to train")
             # Train and evaluate multiple models to select the best one
             best_model = evaluate_model(x_train_norm, x_test_norm, y_train, y_test)
-            print('model received')
+            # print('model received')
 
             # Check if the dataframe has double-hand keypoints (more than 44 features)
-            # if best_model is None:
-            #     return
             if len(df.columns) > 44:
                 # Save the best model and normalizer for double-hand gestures
                 dump(best_model, "final_models/custom_signs/models/2_custom_model.joblib")
@@ -288,4 +287,5 @@ def main(train_button=False, remove_index=None):
         train_model()  # Train the model with the prepared data
         move_file()  # Move the trained model and files to the destination directory
         load_once = True  # Set load_once back to True to trigger data loading again when needed
+        print("Trained Successfully")
         return "Trained Successfully"  # Return success message after training

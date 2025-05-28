@@ -67,7 +67,8 @@ def documentation():
 # Route to configure camera resolution and model category
 @app.route('/configuration', methods=['GET', 'POST'])
 def configuration():
-    global model, normalizer, label, selected_model_category, is_custom_model_trained
+    global model, normalizer, label, selected_model_category, loaded_models
+    loaded_models = load_all_categories()
 
     # Determine current resolution based on current width and height
     current_resolution = None
@@ -107,6 +108,7 @@ def configuration():
 # Video stream endpoint for the webcam feed with real-time sign recognition
 @app.route('/video_feed')
 def video_feed():
+    global model, normalizer, label
     return Response(
         ip.gen_frames(model, normalizer, label),
         mimetype='multipart/x-mixed-replace; boundary=frame'  # Required for streaming MJPEG frames
@@ -208,6 +210,7 @@ def speak():
 # Route for handling the custom model training interface
 @app.route('/train_model', methods=['GET', 'POST'])
 def train_model():
+    global loaded_models
     action = None
     remove_index = None
     
@@ -228,6 +231,7 @@ def train_model():
         elif action == 'train':
             # Trigger the model training process
             result = train.main(train_button=True)
+            # loaded_models = load_models_fun()
         
         else:
             # Default fallback if action is invalid
